@@ -14,4 +14,5 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Run the R script when the container starts
-CMD ["Rscript", "script.R"]
+# Use ENTRYPOINT to allow command-line arguments
+ENTRYPOINT ["Rscript", "script.R"]
