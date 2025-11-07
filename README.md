@@ -9,10 +9,13 @@ The R script (`script.R`) will:
 - Load the package
 - Print "Hello world!"
 - Display the version of data.table
+- Read a CSV file (`sample_data.csv`) into a data.table object
+- Print the first few rows of the data.table using `head()`
 
 ## Files
 
 - `script.R` - The R script that will be executed
+- `sample_data.csv` - Sample CSV file with employee data
 - `Dockerfile` - Instructions for building the Docker image
 - `README.md` - This file
 
@@ -38,6 +41,17 @@ When you run the container, you should see output similar to:
 Installing package into '/usr/local/lib/R/site-library'...
 [1] "Hello world!"
 data.table version: 1.14.8
+
+Reading CSV file into data.table...
+
+First few rows of the data.table:
+     name age        city salary
+1:   John  25    New York  50000
+2:  Alice  30 Los Angeles  60000
+3:    Bob  35     Chicago  55000
+4:  Carol  28     Houston  52000
+5:  David  32     Phoenix  58000
+6:    Eve  29 Philadelphia  53000
 ```
 
 ## Notes

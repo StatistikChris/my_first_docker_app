@@ -4,8 +4,9 @@ FROM r-base:latest
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy the R script to the container
+# Copy the R script and CSV file to the container
 COPY script.R .
+COPY sample_data.csv .
 
 # Install any additional system dependencies if needed
 # (data.table has some dependencies that are usually available in r-base)
