@@ -4,17 +4,18 @@ This project demonstrates how to create a Docker image that runs an R script.
 
 ## What it does
 
-The R script (`script.R`) will:
-- Install the `data.table` package
-- Load the package
-- Print "Hello world!"
-- Display the version of data.table
-- Read a CSV file (`sample_data.csv`) into a data.table object
-- Print the first few rows of the data.table using `head()`
+This Docker container runs an R web API that:
+- Loads the `data.table` package (pre-installed in the image)
+- Reads a CSV file (`sample_data.csv`) into a data.table object
+- Provides a REST API to interact with the data
+- Supports filtering columns via query parameters
+- Runs as a web server compatible with Cloud Run
 
 ## Files
 
-- `script.R` - The R script that will be executed
+- `server.R` - The R web API using plumber framework
+- `start_server.R` - Script to start the web server
+- `script.R` - Original R script (kept for reference)
 - `sample_data.csv` - Sample CSV file with employee data
 - `Dockerfile` - Instructions for building the Docker image
 - `README.md` - This file
@@ -25,36 +26,85 @@ The R script (`script.R`) will:
 - Docker installed on your system
 
 ### Build the Docker image
+
+**For Linux/AMD64 platforms (cloud environments):**
+```bash
+docker build --platform linux/amd64 -t my-r-app .
+```
+
+**For local development (auto-detect platform):**
 ```bash
 docker build -t my-r-app .
 ```
 
 ### Run the Docker container
+
+**Run locally (will start web server on port 8080):**
 ```bash
-docker run my-r-app
+docker run -p 8080:8080 my-r-app
+```
+
+**Test the API endpoints:**
+```bash
+# Health check
+curl http://localhost:8080/health
+
+# Get all data
+curl http://localhost:8080/data
+
+# Get specific columns
+curl "http://localhost:8080/data?columns=name,salary"
+
+# Root endpoint (API info)
+curl http://localhost:8080/
 ```
 
 ## Expected output
 
-When you run the container, you should see output similar to:
+## API Endpoints
+
+### GET /health
+Returns API status and basic information:
+```json
+{
+  "status": "healthy",
+  "message": "Hello world!",
+  "data_table_version": "1.17.8",
+  "available_columns": ["name", "age", "city", "salary"]
+}
 ```
-Installing package into '/usr/local/lib/R/site-library'...
-[1] "Hello world!"
-data.table version: 1.14.8
 
-Reading CSV file into data.table...
+### GET /data
+Returns all data:
+```json
+{
+  "message": "Showing all columns",
+  "available_columns": ["name", "age", "city", "salary"],
+  "data": [
+    {"name": "John", "age": 25, "city": "New York", "salary": 50000},
+    {"name": "Alice", "age": 30, "city": "Los Angeles", "salary": 60000}
+  ]
+}
+```
 
-First few rows of the data.table:
-     name age        city salary
-1:   John  25    New York  50000
-2:  Alice  30 Los Angeles  60000
-3:    Bob  35     Chicago  55000
-4:  Carol  28     Houston  52000
-5:  David  32     Phoenix  58000
-6:    Eve  29 Philadelphia  53000
+### GET /data?columns=name,salary
+Returns filtered columns:
+```json
+{
+  "message": "Displaying columns: name, salary",
+  "requested_columns": ["name", "salary"],
+  "data": [
+    {"name": "John", "salary": 50000},
+    {"name": "Alice", "salary": 60000}
+  ]
+}
 ```
 
 ## Notes
 
 - The build process may take a few minutes the first time as it downloads the R base image and installs the data.table package
 - Subsequent builds will be faster due to Docker's layer caching
+- Column names are case-sensitive and should match exactly as they appear in the CSV file
+- Multiple columns should be separated by commas (e.g., "name,age,salary")
+- If invalid column names are provided, the script will show a warning and display available columns
+- Available columns in the sample data: `name`, `age`, `city`, `salary`
