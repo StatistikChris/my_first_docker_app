@@ -1,18 +1,24 @@
-# Use the official R base image
-FROM r-base:latest
+# Use rocker/r-ver which has better package management and pre-compiled packages
+FROM rocker/r-ver:4.3.2
 
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy the R script and CSV file to the container
-COPY script.R .
-COPY sample_data.csv .
+# Install required packages including plumber for web API
+RUN install2.r --error \
+    data.table \
+    plumber \
+    jsonlite \
+    && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
-# Install any additional system dependencies if needed
-# (data.table has some dependencies that are usually available in r-base)
-RUN apt-get update && apt-get install -y \
-    && rm -rf /var/lib/apt/lists/*
+# Copy all files to the container
+COPY . .
 
-# Run the R script when the container starts
-# Use ENTRYPOINT to allow command-line arguments
-ENTRYPOINT ["Rscript", "script.R"]
+# Make the start script executable
+RUN chmod +x start_server.R
+
+# Expose port 8080 for Cloud Run
+EXPOSE 8080
+
+# Run the web server
+CMD ["Rscript", "start_server.R"]

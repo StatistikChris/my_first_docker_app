@@ -4,18 +4,18 @@ This project demonstrates how to create a Docker image that runs an R script.
 
 ## What it does
 
-The R script (`script.R`) will:
-- Install the `data.table` package
-- Load the package
-- Print "Hello world!"
-- Display the version of data.table
-- Read a CSV file (`sample_data.csv`) into a data.table object
-- Accept command-line arguments to specify which columns to display
-- Print the first few rows of the selected columns using `head()`
+This Docker container runs an R web API that:
+- Loads the `data.table` package (pre-installed in the image)
+- Reads a CSV file (`sample_data.csv`) into a data.table object
+- Provides a REST API to interact with the data
+- Supports filtering columns via query parameters
+- Runs as a web server compatible with Cloud Run
 
 ## Files
 
-- `script.R` - The R script that will be executed
+- `server.R` - The R web API using plumber framework
+- `start_server.R` - Script to start the web server
+- `script.R` - Original R script (kept for reference)
 - `sample_data.csv` - Sample CSV file with employee data
 - `Dockerfile` - Instructions for building the Docker image
 - `README.md` - This file
@@ -26,73 +26,78 @@ The R script (`script.R`) will:
 - Docker installed on your system
 
 ### Build the Docker image
+
+**For Linux/AMD64 platforms (cloud environments):**
+```bash
+docker build --platform linux/amd64 -t my-r-app .
+```
+
+**For local development (auto-detect platform):**
 ```bash
 docker build -t my-r-app .
 ```
 
 ### Run the Docker container
 
-**Show all columns (default behavior):**
+**Run locally (will start web server on port 8080):**
 ```bash
-docker run my-r-app
+docker run -p 8080:8080 my-r-app
 ```
 
-**Show specific columns:**
+**Test the API endpoints:**
 ```bash
-docker run my-r-app "name,age"
-```
+# Health check
+curl http://localhost:8080/health
 
-**Show single column:**
-```bash
-docker run my-r-app "salary"
-```
+# Get all data
+curl http://localhost:8080/data
 
-**Show multiple columns (comma-separated):**
-```bash
-docker run my-r-app "name,city,salary"
+# Get specific columns
+curl "http://localhost:8080/data?columns=name,salary"
+
+# Root endpoint (API info)
+curl http://localhost:8080/
 ```
 
 ## Expected output
 
-## Expected output
+## API Endpoints
 
-**When showing all columns (no arguments):**
-```
-Installing package into '/usr/local/lib/R/site-library'...
-[1] "Hello world!"
-data.table version: 1.14.8
-
-Reading CSV file into data.table...
-No column names specified. Showing all columns:
-Available columns: name, age, city, salary
-
-First few rows of the data.table:
-     name age        city salary
-1:   John  25    New York  50000
-2:  Alice  30 Los Angeles  60000
-3:    Bob  35     Chicago  55000
-4:  Carol  28     Houston  52000
-5:  David  32     Phoenix  58000
-6:    Eve  29 Philadelphia  53000
+### GET /health
+Returns API status and basic information:
+```json
+{
+  "status": "healthy",
+  "message": "Hello world!",
+  "data_table_version": "1.17.8",
+  "available_columns": ["name", "age", "city", "salary"]
+}
 ```
 
-**When showing specific columns (e.g., "name,salary"):**
+### GET /data
+Returns all data:
+```json
+{
+  "message": "Showing all columns",
+  "available_columns": ["name", "age", "city", "salary"],
+  "data": [
+    {"name": "John", "age": 25, "city": "New York", "salary": 50000},
+    {"name": "Alice", "age": 30, "city": "Los Angeles", "salary": 60000}
+  ]
+}
 ```
-Installing package into '/usr/local/lib/R/site-library'...
-[1] "Hello world!"
-data.table version: 1.14.8
 
-Reading CSV file into data.table...
-Displaying columns: name, salary
-
-First few rows of the selected columns:
-     name salary
-1:   John  50000
-2:  Alice  60000
-3:    Bob  55000
-4:  Carol  52000
-5:  David  58000
-6:    Eve  53000
+### GET /data?columns=name,salary
+Returns filtered columns:
+```json
+{
+  "message": "Displaying columns: name, salary",
+  "requested_columns": ["name", "salary"],
+  "data": [
+    {"name": "John", "salary": 50000},
+    {"name": "Alice", "salary": 60000}
+  ]
+}
 ```
 
 ## Notes

@@ -1,8 +1,8 @@
-# Install the data.table package
-install.packages("data.table", repos = "https://cran.rstudio.com/")
+print("Test Test Test ... ... ...")
 
-# Load the package
-library(data.table)
+
+# Load the package (should be pre-installed in the image)
+library("data.table")
 
 # Print Hello world!
 print("Hello world!")
