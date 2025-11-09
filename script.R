@@ -1,4 +1,4 @@
-# Install the data.table package
+# Install the data.table package from CRAN
 install.packages("data.table", repos = "https://cran.rstudio.com/")
 
 # Load the package
